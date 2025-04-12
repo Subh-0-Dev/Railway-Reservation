@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Train</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+          background-color: #f8f9fa;
+          padding: 30px;
+        }
+        .form-section {
+          background-color: white;
+          padding: 25px;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .route-group {
+          margin-bottom: 15px;
+          padding: 15px;
+          background-color: #f1f1f1;
+          border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="mb-4 text-center">Add Train with Routes</h2>
+
+    <div id="messageDiv"></div>
+
+    <form id="trainForm" class="form-section">
+        <div class="mb-3">
+            <label for="trainName" class="form-label">Train Name</label>
+            <input type="text" class="form-control" id="trainName" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="sourceStation" class="form-label">Source Station</label>
+            <select id="sourceStation" class="form-select" required></select>
+        </div>
+
+        <div class="mb-3">
+            <label for="destinationStation" class="form-label">Destination Station</label>
+            <select id="destinationStation" class="form-select" required></select>
+        </div>
+
+        <h5>Train Routes</h5>
+        <div id="routesContainer"></div>
+
+        <button type="button" class="btn btn-secondary my-3" onclick="addRoute()">+ Add Stop</button>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">Submit Train</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let allStations = [];
+    let selectedRouteStationIds = [];
+
+    window.onload = function () {
+      fetch("http://localhost:8080/admin/stations")
+        .then(res => res.json())
+        .then(data => {
+          allStations = data;
+          populateDropdown('sourceStation', allStations);
+          populateDropdown('destinationStation', allStations);
+          addRoute();
+        });
+    }
+
+    function populateDropdown(id, stations) {
+      const dropdown = document.getElementById(id);
+      dropdown.innerHTML = `<option disabled selected>Select Station</option>`;
+      stations.forEach(station => {
+        const option = document.createElement('option');
+        option.value = station.stationName;
+        option.textContent = station.stationName;
+        dropdown.appendChild(option);
+      });
+    }
+
+    function createStationDropdown() {
+      const select = document.createElement('select');
+      select.className = 'form-select station-select';
+      select.required = true;
+
+      const defaultOption = document.createElement('option');
+      defaultOption.disabled = true;
+      defaultOption.selected = true;
+      defaultOption.textContent = 'Select Station';
+      select.appendChild(defaultOption);
+
+      allStations.forEach(station => {
+        if (!selectedRouteStationIds.includes(station.stationId)) {
+          const option = document.createElement('option');
+          option.value = station.stationId;
+          option.textContent = station.stationName;
+          select.appendChild(option);
+        }
+      });
+
+      select.addEventListener('change', updateSelectedRouteStations);
+      return select;
+    }
+
+    function updateSelectedRouteStations() {
+      selectedRouteStationIds = Array.from(document.querySelectorAll('.station-select'))
+        .map(select => parseInt(select.value));
+
+      document.querySelectorAll('.station-select').forEach(select => {
+        const selectedValue = select.value;
+        select.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.disabled = true;
+        defaultOption.textContent = 'Select Station';
+        select.appendChild(defaultOption);
+
+        allStations.forEach(station => {
+          if (!selectedRouteStationIds.includes(station.stationId) || station.stationId == selectedValue) {
+            const option = document.createElement('option');
+            option.value = station.stationId;
+            option.textContent = station.stationName;
+            if (station.stationId == selectedValue) {
+              option.selected = true;
+            }
+            select.appendChild(option);
+          }
+        });
+      });
+    }
+
+    function addRoute() {
+      const container = document.getElementById('routesContainer');
+      const div = document.createElement('div');
+      div.classList.add('route-group');
+
+      const stationDropdown = createStationDropdown();
+
+      div.innerHTML = `
+        <div class="row g-2">
+          <div class="col-md-3 station-dropdown"></div>
+          <div class="col-md-2">
+            <input type="number" class="form-control stop-number" placeholder="Stop #" required>
+          </div>
+          <div class="col-md-2">
+            <input type="time" class="form-control arrival-time" required>
+          </div>
+          <div class="col-md-2">
+            <input type="time" class="form-control departure-time" required>
+          </div>
+          <div class="col-md-2">
+            <input type="number" class="form-control halt-minutes" placeholder="Halt (min)" required>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(div);
+      div.querySelector('.station-dropdown').appendChild(stationDropdown);
+    }
+
+    document.getElementById('trainForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      const trainName = document.getElementById('trainName').value;
+      const sourceStation = document.getElementById('sourceStation').value;
+      const destinationStation = document.getElementById('destinationStation').value;
+
+      const routes = [];
+
+      document.querySelectorAll('.route-group').forEach(group => {
+        const stationSelect = group.querySelector('.station-select');
+        const stationId = parseInt(stationSelect.value);
+        const stationName = stationSelect.options[stationSelect.selectedIndex].text;
+
+        routes.push({
+          stationId,
+          stationName,
+          stopNumber: parseInt(group.querySelector('.stop-number').value),
+          arrivalTime: group.querySelector('.arrival-time').value,
+          departureTime: group.querySelector('.departure-time').value,
+          haltMinutes: parseInt(group.querySelector('.halt-minutes').value)
+        });
+      });
+
+      const payload = {
+        trainName,
+        sourceStation,
+        destinationStation,
+        route: routes
+      };
+
+      fetch("http://localhost:8080/admin/addtrain", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('messageDiv').innerHTML = `
+          <div class="alert alert-success">✅ ${data}</div>
+        `;
+        document.getElementById('trainForm').reset();
+        document.getElementById('routesContainer').innerHTML = '';
+        selectedRouteStationIds = [];
+        addRoute();
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('messageDiv').innerHTML = `
+          <div class="alert alert-danger">❌ Failed to add train.</div>
+        `;
+      });
+    });
+</script>
+
+</body>
+</html>
