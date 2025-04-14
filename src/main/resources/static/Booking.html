@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Train Reservation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .passenger {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .btn-add {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-submit {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Train Reservation Form</h2>
+
+<div class="form-group">
+  <label for="train">Select Train:</label>
+  <select id="train" required></select>
+</div>
+
+<div class="form-group">
+  <label for="source">Source Station:</label>
+  <select id="source" required></select>
+</div>
+
+<div class="form-group">
+  <label for="destination">Destination Station:</label>
+  <select id="destination" required></select>
+</div>
+
+<div class="form-group">
+  <label for="journeyDate">Journey Date:</label>
+  <input type="date" id="journeyDate" required>
+</div>
+
+<div id="passengerList">
+  <h4>Passengers</h4>
+  <div class="passenger">
+    <input type="text" placeholder="Name" class="passengerName" required>
+    <input type="number" placeholder="Age" class="passengerAge" required>
+    <select class="passengerGender">
+      <option value="MALE">Male</option>
+      <option value="FEMALE">Female</option>
+      <option value="OTHER">Other</option>
+    </select>
+  </div>
+</div>
+
+<button class="btn btn-add" onclick="addPassenger()">Add Passenger</button>
+<button class="btn btn-submit" onclick="submitBooking()">Submit Booking</button>
+
+<div id="message"></div>
+
+<script>
+  const trainSelect = document.getElementById("train");
+  const sourceSelect = document.getElementById("source");
+  const destinationSelect = document.getElementById("destination");
+
+  let trainMap = {}; // id -> train name
+  let stationList = [];
+
+  async function loadTrains() {
+    const response = await fetch("http://localhost:8080/user/trains");
+    const data = await response.json();
+
+    data.body.forEach(train => {
+      trainMap[train.trainId] = train.trainName;
+      const option = document.createElement("option");
+      option.value = train.trainId;
+      option.textContent = `${train.trainId} - ${train.trainName}`;
+      trainSelect.appendChild(option);
+    });
+  }
+
+  trainSelect.addEventListener("change", async function () {
+    const trainId = this.value;
+    const res = await fetch(`http://localhost:8080/train/${trainId}/stations`);
+    stationList = await res.json();
+    populateStations();
+  });
+
+  function populateStations() {
+    sourceSelect.innerHTML = `<option value="">Select</option>`;
+    destinationSelect.innerHTML = `<option value="">Select</option>`;
+
+    stationList.forEach(station => {
+      const srcOption = document.createElement("option");
+      const destOption = document.createElement("option");
+
+      srcOption.value = station.stationName;
+      destOption.value = station.stationName;
+
+      srcOption.textContent = station.stationName;
+      destOption.textContent = station.stationName;
+
+      sourceSelect.appendChild(srcOption);
+      destinationSelect.appendChild(destOption);
+    });
+  }
+
+  destinationSelect.addEventListener("change", function () {
+    if (destinationSelect.value === sourceSelect.value) {
+      alert("Source and destination stations cannot be the same!");
+      destinationSelect.value = "";
+    }
+  });
+
+  sourceSelect.addEventListener("change", function () {
+    if (destinationSelect.value === sourceSelect.value) {
+      alert("Source and destination stations cannot be the same!");
+      sourceSelect.value = "";
+    }
+  });
+
+  function addPassenger() {
+    const passengerDiv = document.createElement("div");
+    passengerDiv.className = "passenger";
+    passengerDiv.innerHTML = `
+      <input type="text" placeholder="Name" class="passengerName" required>
+      <input type="number" placeholder="Age" class="passengerAge" required>
+      <select class="passengerGender">
+        <option value="MALE">Male</option>
+        <option value="FEMALE">Female</option>
+        <option value="OTHER">Other</option>
+      </select>
+    `;
+    document.getElementById("passengerList").appendChild(passengerDiv);
+  }
+
+  async function submitBooking() {
+    const trainId = trainSelect.value;
+    const trainName = trainMap[trainId];
+    const source = sourceSelect.value;
+    const destination = destinationSelect.value;
+    const journeyDate = document.getElementById("journeyDate").value;
+
+    const passengersDivs = document.querySelectorAll(".passenger");
+    const passengers = [];
+
+    passengersDivs.forEach(div => {
+      passengers.push({
+        passengerName: div.querySelector(".passengerName").value,
+        age: div.querySelector(".passengerAge").value,
+        gender: div.querySelector(".passengerGender").value
+      });
+    });
+
+    const payload = {
+      trainId: parseInt(trainId),
+      trainName,
+      sourceStation: source,
+      destinationStation: destination,
+      journeyDate,
+      paymentMode: "UPI",
+      passengersList: passengers
+    };
+
+    const response = await fetch("http://localhost:8080/user/book", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    document.getElementById("message").innerHTML = `
+      <p><strong>PNR:</strong> ${result.pnr} | <strong>Date:</strong> ${result.journeyDate}</p>`;
+  }
+
+  loadTrains();
+</script>
+</body>
+</html>
