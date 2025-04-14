@@ -1,5 +1,6 @@
 package com.subh.RailwayReservation.Entity.Admin;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,7 @@ public class TrainRoutes {
 
     @ManyToOne
     @JoinColumn(name = "trainId")
+    @JsonBackReference
     private Train train;
 
     private int stationId;

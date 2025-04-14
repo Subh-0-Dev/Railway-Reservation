@@ -1,5 +1,6 @@
 package com.subh.RailwayReservation.ServiceImpl;
 
+import com.subh.RailwayReservation.DTOs.TrainDtos.AllTrainDto;
 import com.subh.RailwayReservation.DTOs.TrainDtos.RouteRequestDto;
 import com.subh.RailwayReservation.DTOs.TrainDtos.TrainRequestDto;
 import com.subh.RailwayReservation.Entity.Admin.Train;
@@ -40,5 +41,10 @@ public class TrainServiceImpl implements TrainServices {
 
         trainRepository.save(train);
         return new ResponseEntity<>(train.getTrainName()+" Added Succesfully", HttpStatus.CREATED);
+    }
+
+    @Override
+    public List<?> alltrains() {
+        return trainRepository.findAll();
     }
 }

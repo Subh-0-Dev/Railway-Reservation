@@ -1,5 +1,6 @@
 package com.subh.RailwayReservation.Entity.Admin;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,5 +20,6 @@ public class Train {
     private String DestinationStation;
 
     @OneToMany(mappedBy = "train", cascade=CascadeType.ALL)
+    @JsonManagedReference
     private List<TrainRoutes> routes;
 }

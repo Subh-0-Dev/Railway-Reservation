@@ -27,6 +27,11 @@ public class TrainController {
         return new ResponseEntity<>("Something Went Wrong",HttpStatus.BAD_REQUEST);
     }
 
+    @GetMapping("/trains")
+    public ResponseEntity<?> getAllTrains(){
+        return new ResponseEntity<>(trainServices.alltrains(),HttpStatus.FOUND);
+    }
+
     @GetMapping("/stations")
     public ResponseEntity<?> getStations(){
         return stationServices.getStations();
@@ -40,5 +45,6 @@ public class TrainController {
         }
         return new ResponseEntity<>("Something Went Wrong",HttpStatus.BAD_REQUEST);
     }
+
 
 }
