@@ -2,8 +2,8 @@ package com.subh.RailwayReservation.ServiceImpl;
 
 import com.subh.RailwayReservation.DTOs.TrainDtos.RouteRequestDto;
 import com.subh.RailwayReservation.DTOs.TrainDtos.TrainRequestDto;
-import com.subh.RailwayReservation.Entity.Train;
-import com.subh.RailwayReservation.Entity.TrainRoutes;
+import com.subh.RailwayReservation.Entity.Admin.Train;
+import com.subh.RailwayReservation.Entity.Admin.TrainRoutes;
 import com.subh.RailwayReservation.Repository.TrainRepository;
 import com.subh.RailwayReservation.Services.TrainServices;
 import org.springframework.beans.factory.annotation.Autowired;

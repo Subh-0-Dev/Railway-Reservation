@@ -1,6 +1,6 @@
 package com.subh.RailwayReservation.Repository;
 
-import com.subh.RailwayReservation.Entity.Train;
+import com.subh.RailwayReservation.Entity.Admin.Train;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

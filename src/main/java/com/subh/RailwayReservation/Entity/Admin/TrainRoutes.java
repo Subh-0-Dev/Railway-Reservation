@@ -1,7 +1,6 @@
-package com.subh.RailwayReservation.Entity;
+package com.subh.RailwayReservation.Entity.Admin;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
