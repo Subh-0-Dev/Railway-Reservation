@@ -62,7 +62,7 @@
     let selectedRouteStationIds = [];
 
     window.onload = function () {
-      fetch("http://localhost:8080/admin/stations")
+      fetch("https://delightful-illumination-production-e606.up.railway.app/admin/stations")
         .then(res => res.json())
         .then(data => {
           allStations = data;
@@ -193,7 +193,7 @@
         route: routes
       };
 
-      fetch("http://localhost:8080/admin/addtrain", {
+      fetch("https://delightful-illumination-production-e606.up.railway.app/admin/addtrain", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
